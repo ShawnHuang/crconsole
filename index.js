@@ -269,7 +269,25 @@ ChromeREPL.prototype = {
 
   // compliant with node REPL module eval function reqs
   eval: function(cmd, context, filename, cb) {
-    this.evalInTab(cmd, cb);
+    //this.evalInTab(cmd, cb);
+    var err, result;
+    try{
+      var script = require("vm").createScript(cmd.slice(1,-2), {
+        filename: filename,
+        displayErrors: false
+      });
+    } catch (e){
+      err = e;
+    }
+    var mess = !!err;
+    if(mess) {
+      cb(err, result);
+    }
+    else{
+      this.client.Runtime.evaluate({expression: cmd.slice(1, -2), generatePreview: true}, function(err, resp) {
+        return cb(null, resp);
+      });
+    }
   },
 
   evalInTab: function(input, cb) {
